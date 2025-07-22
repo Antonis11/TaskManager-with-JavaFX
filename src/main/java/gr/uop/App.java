@@ -1,12 +1,18 @@
 package gr.uop;
 
+import java.util.Comparator;
+import java.util.Optional;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -69,6 +75,55 @@ public class App extends Application {
         GridPane.setHalignment(description, HPos.CENTER);
 
         mainPane.getChildren().addAll(taskForm, task);
+
+        // Button actions
+        add.setOnAction((e) -> {
+            String tit = tf_title.getText();
+            String des = ta_description.getText();
+            if (tit.isEmpty() || des.isEmpty()) {
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Warning");
+                alert.setHeaderText("Both fields are required.");
+                alert.show();
+                return;
+            }
+            Task newTask = new Task(tit, des);
+            tasks.add(newTask);
+
+            tf_title.clear();
+            ta_description.clear();
+        });
+
+        update.setOnAction(event -> {
+            Task selectedTask = task.getSelectionModel().getSelectedItem();
+
+            UpdateTaskDialog dialog = new UpdateTaskDialog(stage);
+            dialog.setTask(selectedTask);
+
+            Optional<ButtonType> result = dialog.showAndWait();
+            if (result.get() == ButtonType.OK) {
+                String newTitle = dialog.getNewTitle();
+                String newDescription = dialog.getNewDescription();
+                selectedTask.setTitle(newTitle);
+                selectedTask.setDescription(newDescription);
+
+                task.refresh();
+
+            } else if (result.get() == ButtonType.CANCEL) {
+
+            }
+        });
+
+        delete.setOnAction((e) -> {
+            int selectedIndex = task.getSelectionModel().getSelectedIndex();
+            if (selectedIndex >= 0) {
+                tasks.remove(selectedIndex);
+            }
+        });
+
+        sort.setOnAction(event -> {
+            FXCollections.sort(tasks, Comparator.comparing(Task::getTitle));
+        });
 
         var scene = new Scene(mainPane, 640, 480);
         stage.setScene(scene);
